@@ -330,7 +330,10 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
 
   // Simple software de-bounce
   if( ( millis() - _lastInterruptTime ) < 30 )
+  {
+    portEXIT_CRITICAL_ISR( &mux );
     return;
+  }
 
   // HIGH = idle, LOW = active
   bool isPressed = !digitalRead( encoderPinButton );
