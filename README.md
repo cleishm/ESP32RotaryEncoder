@@ -33,12 +33,12 @@ There are a few ways, choose whichever you prefer (pick **one**, don't do all th
 
 - Search the [Library Registry](https://registry.platformio.org/search?t=library) for `MaffooClock/ESP32RotaryEncoder` and install it automatically.
 
-- Edit your [platformio.ini](https://docs.platformio.org/en/latest/projectconf/index.html) file and add `MaffooClock/ESP32RotaryEncoder@^1.1.1` to your [`lib_deps`](https://docs.platformio.org/en/latest/projectconf/sections/env/options/library/lib_deps.html) stanza.
+- Edit your [platformio.ini](https://docs.platformio.org/en/latest/projectconf/index.html) file and add `MaffooClock/ESP32RotaryEncoder@^1.1.2` to your [`lib_deps`](https://docs.platformio.org/en/latest/projectconf/sections/env/options/library/lib_deps.html) stanza.
 
 - Use the command line interface:
    ```shell
    cd MyProject
-   pio pkg install --library "MaffooClock/ESP32RotaryEncoder@^1.1.1"
+   pio pkg install --library "MaffooClock/ESP32RotaryEncoder@^1.1.2"
    ```
 
 #### Arduino IDE
@@ -171,7 +171,7 @@ See [esp32-hal-log.h](https://github.com/espressif/arduino-esp32/blob/master/cor
 
 ## Compatibility
 
-So far, this has only been tested on an [Arduino Nano ESP32](https://docs.arduino.cc/hardware/nano-esp32).  This _should_ work on any ESP32 in Arduino IDE and PlatformIO as long as your framework packages are current.
+So far, this has only been tested on an [Arduino Nano ESP32](https://docs.arduino.cc/hardware/nano-esp32) and a generic ESP-WROOM-32 module.  This _should_ work on any ESP32 in Arduino IDE and PlatformIO as long as your framework packages are current.
 
 This library more than likely won't work at all on non-ESP32 devices -- it uses features from the ESP32 IDF, such as [esp_timer.h](https://github.com/espressif/esp-idf/blob/master/components/esp_timer/include/esp_timer.h), along with [FunctionalInterrupt.h](https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/FunctionalInterrupt.h) from the Arduino API.  So, to try and use this on a non-ESP32 might require some serious overhauling.
 
