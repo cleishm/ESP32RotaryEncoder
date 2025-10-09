@@ -69,62 +69,52 @@ void RotaryEncoder::setEncoderType( EncoderType type )
 
 void RotaryEncoder::setBoundaries( long minValue, long maxValue, bool circleValues )
 {
-  portENTER_CRITICAL( &mux );
-
+  ESP_LOGD( LOG_TAG, "boundary minValue = %ld, maxValue = %ld, circular = %s", minValue, maxValue, ( circleValues ? "true" : "false" ) );
   if( minValue > maxValue )
     ESP_LOGW( LOG_TAG, "Minimum value (%ld) is greater than maximum value (%ld); behavior is undefined.", minValue, maxValue );
 
-  setMinValue( minValue );
-  setMaxValue( maxValue );
-  setCircular( circleValues );
-
+  portENTER_CRITICAL( &mux );
+  this->minEncoderValue = minValue;
+  this->maxEncoderValue = maxValue;
+  this->circleValues = circleValues;
   portEXIT_CRITICAL( &mux );
 }
 
 void RotaryEncoder::setMinValue( long minValue )
 {
-  portENTER_CRITICAL( &mux );
-
   ESP_LOGD( LOG_TAG, "minValue = %ld", minValue );
 
+  portENTER_CRITICAL( &mux );
   this->minEncoderValue = minValue;
-
   portEXIT_CRITICAL( &mux );
 }
 
 void RotaryEncoder::setMaxValue( long maxValue )
 {
-  portENTER_CRITICAL( &mux );
-
   ESP_LOGD( LOG_TAG, "maxValue = %ld", maxValue );
 
+  portENTER_CRITICAL( &mux );
   this->maxEncoderValue = maxValue;
-
   portEXIT_CRITICAL( &mux );
 }
 
 void RotaryEncoder::setCircular( bool circleValues )
 {
-  portENTER_CRITICAL( &mux );
-
   ESP_LOGD( LOG_TAG, "Boundaries %s circular", ( circleValues ? "are" : "are not" ) );
 
+  portENTER_CRITICAL( &mux );
   this->circleValues = circleValues;
-
   portEXIT_CRITICAL( &mux );
 }
 
 void RotaryEncoder::setStepValue( long stepValue )
 {
-  portENTER_CRITICAL( &mux );
-
   ESP_LOGD( LOG_TAG, "stepValue = %ld", stepValue );
-
   if( stepValue > maxEncoderValue || stepValue < minEncoderValue )
     ESP_LOGW( LOG_TAG, "Step value (%ld) is outside the bounds (%ld...%ld); behavior is undefined.", stepValue, minEncoderValue, maxEncoderValue );
 
+  portENTER_CRITICAL( &mux );
   this->stepValue = stepValue;
-
   portEXIT_CRITICAL( &mux );
 }
 
@@ -258,6 +248,9 @@ void RotaryEncoder::disable()
 
 bool RotaryEncoder::buttonPressed()
 {
+  bool wasPressed = false;
+  unsigned long duration = 0;
+
   portENTER_CRITICAL( &mux );
 
   if( !_isEnabled ) {
@@ -265,35 +258,33 @@ bool RotaryEncoder::buttonPressed()
     return false;
   }
 
-  if( buttonPressedFlag )
-    ESP_LOGD( LOG_TAG, "Button pressed for %lu ms", buttonPressedDuration );
-
-  bool wasPressed = buttonPressedFlag;
-
+  wasPressed = buttonPressedFlag;
   buttonPressedFlag = false;
+  duration = buttonPressedDuration;
 
   portEXIT_CRITICAL( &mux );
+
+  if( wasPressed )
+    ESP_LOGD( LOG_TAG, "Button pressed for %lu ms", duration );
 
   return wasPressed;
 }
 
 bool RotaryEncoder::encoderChanged()
 {
+  bool hasChanged = false;
+  long value = 0;
+
   portENTER_CRITICAL( &mux );
-
-  if( !_isEnabled ) {
-    portEXIT_CRITICAL( &mux );
-    return false;
+  if( _isEnabled ) {
+    hasChanged = encoderChangedFlag;
+    value = currentValue;
+    encoderChangedFlag = false;
   }
-
-  if( encoderChangedFlag )
-    ESP_LOGD( LOG_TAG, "Knob turned; value: %ld", getEncoderValue() );
-
-  bool hasChanged = encoderChangedFlag;
-
-  encoderChangedFlag = false;
-
   portEXIT_CRITICAL( &mux );
+
+  if( hasChanged )
+      ESP_LOGD( LOG_TAG, "Knob turned; value: %ld", value );
 
   return hasChanged;
 }
@@ -301,42 +292,38 @@ bool RotaryEncoder::encoderChanged()
 long RotaryEncoder::getEncoderValue()
 {
   portENTER_CRITICAL( &mux );
-
-  constrainValue();
-
   long value = currentValue;
-
   portEXIT_CRITICAL( &mux );
 
   return value;
 }
 
-void RotaryEncoder::constrainValue()
+long RotaryEncoder::constrainValue(long value)
 {
-  long unconstrainedValue = currentValue;
+  if( value < minEncoderValue )
+    return circleValues ? maxEncoderValue : minEncoderValue;
 
-  if( currentValue < minEncoderValue )
-    currentValue = circleValues ? maxEncoderValue : minEncoderValue;
+  else if( value > maxEncoderValue )
+    return circleValues ? minEncoderValue : maxEncoderValue;
 
-  else if( currentValue > maxEncoderValue )
-    currentValue = circleValues ? minEncoderValue : maxEncoderValue;
-
-  if( unconstrainedValue != currentValue )
-    ESP_LOGD( LOG_TAG, "Encoder value '%ld' constrained to '%ld'", unconstrainedValue, currentValue );
+  else
+    return value;
 }
 
 void RotaryEncoder::setEncoderValue( long newValue )
 {
+  long constrainedValue = constrainValue(newValue);
+  if( constrainedValue != newValue )
+    ESP_LOGD( LOG_TAG, "Encoder value '%ld' constrained to '%ld'", constrainedValue, newValue );
+
+  long oldValue;
   portENTER_CRITICAL( &mux );
-
-  if( newValue != currentValue )
-    ESP_LOGD( LOG_TAG, "Overriding encoder value from '%ld' to '%ld'", currentValue, newValue );
-
-  currentValue = newValue;
-
-  constrainValue();
-
+  oldValue = currentValue;
+  currentValue = constrainedValue;
   portEXIT_CRITICAL( &mux );
+
+  if( constrainedValue != oldValue )
+    ESP_LOGD( LOG_TAG, "Overriding encoder value from '%ld' to '%ld'", oldValue, constrainedValue );
 }
 
 void ARDUINO_ISR_ATTR RotaryEncoder::loop()
@@ -365,15 +352,11 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
   if( isPressed )
   {
     buttonPressedTime = millis();
-
-    ESP_EARLY_LOGV( LOG_TAG, "Button pressed at %u", buttonPressedTime );
   }
   else
   {
     unsigned long now = millis();
     buttonPressedDuration = now - buttonPressedTime;
-
-    ESP_EARLY_LOGV( LOG_TAG, "Button released at %u", now );
 
     buttonPressedFlag = true;
   }
@@ -434,12 +417,12 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_encoder_ISR()
 
   if( _encoderPosition > encoderTripPoint )        // Four steps forward
   {
-    this->currentValue += _stepValue;
+    this->currentValue = constrainValue(this->currentValue + _stepValue);
     valueChanged = true;
   }
   else if( _encoderPosition < -encoderTripPoint )  // Four steps backwards
   {
-    this->currentValue -= _stepValue;
+    this->currentValue = constrainValue(this->currentValue - _stepValue);
     valueChanged = true;
   }
 
