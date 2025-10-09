@@ -13,29 +13,6 @@
 
 #endif
 
-#if defined( ESP32 )
-  #define RE_ISR_ATTR IRAM_ATTR
-
-  #ifdef ARDUINO_ISR_ATTR
-    #undef ARDUINO_ISR_ATTR
-    #define ARDUINO_ISR_ATTR IRAM_ATTR
-  #endif
-
-  #if defined( ESP_ARDUINO_VERSION ) && ( ESP_ARDUINO_VERSION == ESP_ARDUINO_VERSION_VAL(2,0,10) )
-    /**
-     * BUG ALERT!
-     *
-     * With Arduino-ESP32 core 2.0.10, the #include statement below
-     * fails to compile due to a bug.
-     * Also see `attachInterrupts()` in ESP32RotaryEncoder.cpp for
-     * the note about the `attachInterrupt()` macro in 2.x cores.
-     */
-    #error Please upgrade the Arduino-ESP32 core to use this library.
-  #else
-    #include <FunctionalInterrupt.h>
-  #endif
-#endif
-
 #define RE_DEFAULT_PIN  -1
 #define RE_DEFAULT_STEPS 4
 #define RE_LOOP_INTERVAL 100000U  // 0.1 seconds
@@ -248,7 +225,7 @@ class RotaryEncoder {
      * This would normally be called in userspace `loop()`, but we're using the `loopTimer` instead.
      *
      */
-    void ARDUINO_ISR_ATTR loop();
+    void loop();
 
   private:
 
@@ -387,7 +364,7 @@ class RotaryEncoder {
      *
      * @param arg
      */
-    static void ARDUINO_ISR_ATTR timerCallback( void *arg )
+    static void timerCallback( void *arg )
     {
       RotaryEncoder *instance = (RotaryEncoder *)arg;
       instance->loop();
@@ -400,7 +377,7 @@ class RotaryEncoder {
      * the `encoderChangedFlag` to be picked up by `encoderChanged()` in `_loop()`.
      *
      */
-    void ARDUINO_ISR_ATTR _encoder_ISR();
+    void _encoder_ISR();
 
     /**
      * @brief Interrupt Service Routine for the pushbutton.
@@ -408,7 +385,7 @@ class RotaryEncoder {
      * Sets the `buttonPressedFlag` to be picked up by `buttonPressed()` in `_loop()`.
      *
      */
-    void ARDUINO_ISR_ATTR _button_ISR();
+    void _button_ISR();
 };
 
 #endif
