@@ -22,13 +22,12 @@
 #endif
 
 RotaryEncoder::RotaryEncoder( uint8_t encoderPinA, uint8_t encoderPinB, int8_t encoderPinButton, int8_t encoderPinVcc, uint8_t encoderSteps )
+  : encoderPinA{ encoderPinA },
+    encoderPinB{ encoderPinB },
+    encoderPinButton{ encoderPinButton },
+    encoderPinVcc{ encoderPinVcc },
+    encoderSteps{ encoderSteps == 0 ? RE_DEFAULT_STEPS : encoderSteps }
 {
-  this->encoderPinA      = encoderPinA;
-  this->encoderPinB      = encoderPinB;
-  this->encoderPinButton = encoderPinButton;
-  this->encoderPinVcc    = encoderPinVcc;
-  this->encoderTripPoint = encoderSteps - 1;
-
   ESP_LOGD( LOG_TAG, "Initialized: A = %u, B = %u, Button = %i, VCC = %i, Steps = %u", encoderPinA, encoderPinB, encoderPinButton, encoderPinVcc, encoderSteps );
 }
 
@@ -128,6 +127,12 @@ void RotaryEncoder::onPressed( ButtonCallback f )
   callbackButtonPressed = f;
 }
 
+static void timerCallback( void *arg )
+{
+  RotaryEncoder *instance = (RotaryEncoder *)arg;
+  instance->loop();
+}
+
 void RotaryEncoder::beginLoopTimer()
 {
   /**
@@ -190,7 +195,11 @@ void RotaryEncoder::begin( bool useTimer )
 {
   resetEncoderValue();
 
+  _lastRotaryInterruptTime = 0;
+  _previousAB = 3;
+  _encoderPosition = 0;
   encoderChangedFlag = false;
+
   buttonPressedFlag = false;
   _lastButtonInterruptTime = 0;
   buttonPressedTime = 0;
@@ -298,7 +307,7 @@ long RotaryEncoder::getEncoderValue()
   return value;
 }
 
-long RotaryEncoder::constrainValue(long value)
+long RotaryEncoder::constrainValue( long value )
 {
   if( value < minEncoderValue )
     return circleValues ? maxEncoderValue : minEncoderValue;
@@ -412,15 +421,15 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_encoder_ISR()
   /**
    * Update counter if encoder has rotated a full detent
    * For the following comments, we'll assume it's 4 steps per detent
-   * The tripping point is `STEPS - 1` (so, 3 in this example)
+   * The tripping point is >= STEPS or <= -STEPS
    */
 
-  if( _encoderPosition > encoderTripPoint )        // Four steps forward
+  if( _encoderPosition >= encoderSteps )        // Four steps forward
   {
     this->currentValue = constrainValue(this->currentValue + _stepValue);
     valueChanged = true;
   }
-  else if( _encoderPosition < -encoderTripPoint )  // Four steps backwards
+  else if( _encoderPosition <= -encoderSteps )  // Four steps backwards
   {
     this->currentValue = constrainValue(this->currentValue - _stepValue);
     valueChanged = true;
