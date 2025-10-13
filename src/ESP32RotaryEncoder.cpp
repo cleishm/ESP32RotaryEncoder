@@ -39,7 +39,7 @@ RotaryEncoder::~RotaryEncoder()
   esp_timer_delete( loopTimer );
 }
 
-void RotaryEncoder::setEncoderType( EncoderType type )
+void RotaryEncoder::setEncoderType( Type type )
 {
   switch( type )
   {
@@ -127,12 +127,6 @@ void RotaryEncoder::onPressed( ButtonCallback f )
   callbackButtonPressed = f;
 }
 
-static void timerCallback( void *arg )
-{
-  RotaryEncoder *instance = (RotaryEncoder *)arg;
-  instance->loop();
-}
-
 void RotaryEncoder::beginLoopTimer()
 {
   /**
@@ -157,6 +151,12 @@ void RotaryEncoder::beginLoopTimer()
 
   esp_timer_create( &_timerConfig, &loopTimer );
   esp_timer_start_periodic( loopTimer, RE_LOOP_INTERVAL );
+}
+
+void RotaryEncoder::timerCallback( void *self )
+{
+  RotaryEncoder *instance = (RotaryEncoder *)self;
+  instance->loop();
 }
 
 void RotaryEncoder::attachInterrupts()

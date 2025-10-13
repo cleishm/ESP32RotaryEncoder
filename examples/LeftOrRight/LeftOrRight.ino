@@ -1,9 +1,9 @@
 /**
  * ESP32RotaryEncoder: LeftOrRight.ino
- * 
+ *
  * This is a simple example of how to track whether the knob was
  * turned left or right instead of tracking a numeric value
- * 
+ *
  * Created 1 November 2023
  * By Matthew Clark
  */
@@ -83,7 +83,7 @@ void setup()
 	Serial.begin( 115200 );
 
 	// This tells the library that the encoder has its own pull-up resistors
-	rotaryEncoder.setEncoderType( EncoderType::HAS_PULLUP );
+	rotaryEncoder.setEncoderType( RotaryEncoder::Type::HAS_PULLUP );
 
 	// The encoder will only return -1, 0, or 1, and will not wrap around.
 	rotaryEncoder.setBoundaries( -1, 1, false );
