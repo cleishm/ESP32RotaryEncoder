@@ -335,11 +335,13 @@ class RotaryEncoder {
     esp_timer_handle_t loopTimer;
 
     /**
-     * @brief Constrains the value set by `encoder_ISR()` and `setEncoderValue()`
-     * to be in the range set by `setBoundaries()`.
+     * @brief Constrains a value to be in the range set by `setBoundaries()`.
      *
+     * @param value The value to constrain
+     *
+     * @return The constrained value
      */
-    void constrainValue();
+    long constrainValue(long value);
 
     /**
      * @brief Attaches ISRs to encoder and button pins.
