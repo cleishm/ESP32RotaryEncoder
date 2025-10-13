@@ -1,5 +1,26 @@
 #include "ESP32RotaryEncoder.h"
 
+#if defined( ESP32 )
+  #define RE_ISR_ATTR IRAM_ATTR
+
+  #ifdef ARDUINO_ISR_ATTR
+    #undef ARDUINO_ISR_ATTR
+    #define ARDUINO_ISR_ATTR IRAM_ATTR
+  #endif
+
+  #if defined( ESP_ARDUINO_VERSION ) && ( ESP_ARDUINO_VERSION == ESP_ARDUINO_VERSION_VAL(2,0,10) )
+    /**
+     * BUG ALERT!
+     *
+     * With Arduino-ESP32 core 2.0.10, the #include statement below fails to compile due to a bug.
+     * Also see `attachInterrupts()` for the note about the `attachInterrupt()` macro in 2.x cores.
+     */
+    #error Please upgrade the Arduino-ESP32 core to use this library.
+  #else
+    #include <FunctionalInterrupt.h>
+  #endif
+#endif
+
 RotaryEncoder::RotaryEncoder( uint8_t encoderPinA, uint8_t encoderPinB, int8_t encoderPinButton, int8_t encoderPinVcc, uint8_t encoderSteps )
 {
   this->encoderPinA      = encoderPinA;
