@@ -259,8 +259,10 @@ bool RotaryEncoder::buttonPressed()
 {
   portENTER_CRITICAL( &mux );
 
-  if( !_isEnabled )
+  if( !_isEnabled ) {
+    portEXIT_CRITICAL( &mux );
     return false;
+  }
 
   if( buttonPressedFlag )
     ESP_LOGD( LOG_TAG, "Button pressed for %lu ms", buttonPressedDuration );
@@ -278,8 +280,10 @@ bool RotaryEncoder::encoderChanged()
 {
   portENTER_CRITICAL( &mux );
 
-  if( !_isEnabled )
+  if( !_isEnabled ) {
+    portEXIT_CRITICAL( &mux );
     return false;
+  }
 
   if( encoderChangedFlag )
     ESP_LOGD( LOG_TAG, "Knob turned; value: %ld", getEncoderValue() );
