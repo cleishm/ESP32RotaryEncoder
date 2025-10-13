@@ -181,6 +181,7 @@ void RotaryEncoder::begin( bool useTimer )
 
   encoderChangedFlag = false;
   buttonPressedFlag = false;
+  _lastButtonInterruptTime = 0;
   buttonPressedTime = 0;
   buttonPressedDuration = 0;
 
@@ -326,10 +327,8 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
 {
   portENTER_CRITICAL_ISR( &mux );
 
-  static unsigned long _lastInterruptTime = 0;
-
   // Simple software de-bounce
-  if( ( millis() - _lastInterruptTime ) < 30 )
+  if( ( millis() - _lastButtonInterruptTime ) < 30 )
   {
     portEXIT_CRITICAL_ISR( &mux );
     return;
@@ -354,7 +353,7 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
     buttonPressedFlag = true;
   }
 
-  _lastInterruptTime = millis();
+  _lastButtonInterruptTime = millis();
 
   portEXIT_CRITICAL_ISR( &mux );
 }
@@ -371,11 +370,6 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_encoder_ISR()
    * https://www.best-microcontroller-projects.com/rotary-encoder.html
    */
 
-  static uint8_t _previousAB = 3;
-  static int8_t _encoderPosition = 0;
-  static unsigned long _lastInterruptTime = 0;
-  static long _stepValue;
-
   bool valueChanged = false;
 
   _previousAB <<=2;  // Remember previous state
@@ -390,8 +384,9 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_encoder_ISR()
    * Based on how fast the encoder is being turned, we can apply an acceleration factor
    */
 
-  unsigned long speed = micros() - _lastInterruptTime;
+  unsigned long speed = micros() - _lastRotaryInterruptTime;
 
+  long _stepValue;
   if( speed > 40000UL )                            // Greater than 40 milliseconds
     _stepValue = this->stepValue;                  // Increase/decrease by 1 x stepValue
 
@@ -431,7 +426,7 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_encoder_ISR()
     _encoderPosition = 0;
 
     // Remember current time so we can calculate speed
-    _lastInterruptTime = micros();
+    _lastRotaryInterruptTime = micros();
   }
 
   portEXIT_CRITICAL_ISR( &mux );

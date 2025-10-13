@@ -288,6 +288,15 @@ class RotaryEncoder {
     bool _isEnabled = true;
 
     /**
+     * @brief
+     *
+     */
+    unsigned long _lastRotaryInterruptTime = 0;
+    uint8_t _previousAB = 3;
+    int8_t _encoderPosition = 0;
+    long _stepValue;
+
+    /**
      * @brief Sets the minimum and maximum values of `currentValue`.
      *
      * Set in `setBoundaries()` and used in `constrainValue()`.
@@ -338,7 +347,7 @@ class RotaryEncoder {
      * @brief
      *
      */
-    volatile unsigned long buttonPressedTime, buttonPressedDuration;
+    volatile unsigned long _lastButtonInterruptTime, buttonPressedTime, buttonPressedDuration;
 
     /**
      * @brief The loop timer configured and started in `beginLoopTimer()`.
