@@ -46,15 +46,15 @@ class RotaryEncoder {
      *
      * @param encoderPinA        The A pin on the encoder, sometimes marked "CLK"
      * @param encoderPinB        The B pin on the encoder, sometimes marked "DT"
-     * @param encoderPinButton   Optional; the pushbutton pin, could be marked "SW"
-     * @param encoderPinVcc      Optional; the voltage reference input, could be marked "+" or "V+" or "VCC"; defaults to -1, which is ignored
+     * @param buttonPin          Optional; the pushbutton pin, could be marked "SW"
+     * @param vccPin             Optional; the voltage reference input, could be marked "+" or "V+" or "VCC"; defaults to -1, which is ignored
      * @param encoderSteps       Optional; the number of steps per detent; usually 4 (default), could be 2. A value of 0 will be imply the default.
      */
     RotaryEncoder(
       uint8_t encoderPinA,
       uint8_t encoderPinB,
-      int8_t encoderPinButton = RE_DEFAULT_PIN,
-      int8_t encoderPinVcc = RE_DEFAULT_PIN,
+      int8_t buttonPin = RE_DEFAULT_PIN,
+      int8_t vccPin = RE_DEFAULT_PIN,
       uint8_t encoderSteps = RE_DEFAULT_STEPS
     );
 
@@ -253,8 +253,8 @@ class RotaryEncoder {
 
     const uint8_t encoderPinA;
     const uint8_t encoderPinB;
-    const int8_t encoderPinButton;
-    const int8_t encoderPinVcc;
+    const int8_t buttonPin;
+    const int8_t vccPin;
     const uint8_t encoderSteps;
 
     std::atomic<bool> _isEnabled{true};

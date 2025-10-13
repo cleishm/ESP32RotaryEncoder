@@ -21,14 +21,14 @@
   #endif
 #endif
 
-RotaryEncoder::RotaryEncoder( uint8_t encoderPinA, uint8_t encoderPinB, int8_t encoderPinButton, int8_t encoderPinVcc, uint8_t encoderSteps )
+RotaryEncoder::RotaryEncoder( uint8_t encoderPinA, uint8_t encoderPinB, int8_t buttonPin, int8_t vccPin, uint8_t encoderSteps )
   : encoderPinA{ encoderPinA },
     encoderPinB{ encoderPinB },
-    encoderPinButton{ encoderPinButton },
-    encoderPinVcc{ encoderPinVcc },
+    buttonPin{ buttonPin },
+    vccPin{ vccPin },
     encoderSteps{ encoderSteps == 0 ? RE_DEFAULT_STEPS : encoderSteps }
 {
-  ESP_LOGD( LOG_TAG, "Initialized: A = %u, B = %u, Button = %i, VCC = %i, Steps = %u", encoderPinA, encoderPinB, encoderPinButton, encoderPinVcc, encoderSteps );
+  ESP_LOGD( LOG_TAG, "Initialized: A = %u, B = %u, Button = %i, VCC = %i, Steps = %u", encoderPinA, encoderPinB, buttonPin, vccPin, this->encoderSteps );
 }
 
 RotaryEncoder::~RotaryEncoder()
@@ -176,8 +176,8 @@ void RotaryEncoder::attachInterrupts()
   attachInterrupt( encoderPinA, std::bind( &RotaryEncoder::_encoder_ISR, this ), CHANGE );
   attachInterrupt( encoderPinB, std::bind( &RotaryEncoder::_encoder_ISR, this ), CHANGE );
 
-  if( encoderPinButton > RE_DEFAULT_PIN )
-    attachInterrupt( encoderPinButton, std::bind( &RotaryEncoder::_button_ISR, this ), CHANGE );
+  if( buttonPin > RE_DEFAULT_PIN )
+    attachInterrupt( buttonPin, std::bind( &RotaryEncoder::_button_ISR, this ), CHANGE );
 
   ESP_LOGD( LOG_TAG, "Interrupts attached" );
 }
@@ -186,7 +186,7 @@ void RotaryEncoder::detachInterrupts()
 {
   detachInterrupt( encoderPinA );
   detachInterrupt( encoderPinB );
-  detachInterrupt( encoderPinButton );
+  detachInterrupt( buttonPin );
 
   ESP_LOGD( LOG_TAG, "Interrupts detached" );
 }
@@ -208,13 +208,13 @@ void RotaryEncoder::begin( bool useTimer )
   pinMode( encoderPinA, encoderPinMode );
   pinMode( encoderPinB, encoderPinMode );
 
-  if( encoderPinButton > RE_DEFAULT_PIN )
-    pinMode( encoderPinButton, buttonPinMode );
+  if( buttonPin > RE_DEFAULT_PIN )
+    pinMode( buttonPin, buttonPinMode );
 
-  if( encoderPinVcc > RE_DEFAULT_PIN )
+  if( vccPin > RE_DEFAULT_PIN )
   {
-    pinMode( encoderPinVcc, OUTPUT );
-    digitalWrite( encoderPinVcc, HIGH );
+    pinMode( vccPin, OUTPUT );
+    digitalWrite( vccPin, HIGH );
   }
 
   delay( 20 );
@@ -355,7 +355,7 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
   }
 
   // HIGH = idle, LOW = active
-  bool isPressed = !digitalRead( encoderPinButton );
+  bool isPressed = !digitalRead( buttonPin );
 
   if( isPressed )
   {
