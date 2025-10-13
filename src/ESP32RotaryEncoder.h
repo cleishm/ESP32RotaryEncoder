@@ -13,9 +13,9 @@
 
 #endif
 
-#define RE_DEFAULT_PIN  -1
-#define RE_DEFAULT_STEPS 4
-#define RE_LOOP_INTERVAL 100000U  // 0.1 seconds
+static constexpr int8_t RE_DEFAULT_PIN = -1;
+static constexpr uint8_t RE_DEFAULT_STEPS = 4;
+static constexpr uint64_t RE_LOOP_INTERVAL = 100000U;  // 0.1 seconds
 
 typedef enum {
   FLOATING,
@@ -46,7 +46,7 @@ class RotaryEncoder {
      * @param encoderPinB        The B pin on the encoder, sometimes marked "DT"
      * @param encoderPinButton   Optional; the pushbutton pin, could be marked "SW"
      * @param encoderPinVcc      Optional; the voltage reference input, could be marked "+" or "V+" or "VCC"; defaults to -1, which is ignored
-     * @param encoderSteps       Optional; the number of steps per detent; usually 4 (default), could be 2
+     * @param encoderSteps       Optional; the number of steps per detent; usually 4 (default), could be 2. A value of 0 will be imply the default.
      */
     RotaryEncoder(
       uint8_t encoderPinA,
@@ -228,7 +228,6 @@ class RotaryEncoder {
     void loop();
 
   private:
-
     const char *LOG_TAG = "ESP32RotaryEncoder";
 
     EncoderCallback callbackEncoderChanged = NULL;
@@ -250,152 +249,39 @@ class RotaryEncoder {
     int encoderPinMode = INPUT;
     int buttonPinMode  = INPUT;
 
-    uint8_t encoderPinA;
-    uint8_t encoderPinB;
-    int8_t encoderPinButton;
-    int8_t encoderPinVcc;
-    uint8_t encoderTripPoint;
+    const uint8_t encoderPinA;
+    const uint8_t encoderPinB;
+    const int8_t encoderPinButton;
+    const int8_t encoderPinVcc;
+    const uint8_t encoderSteps;
 
-    /**
-     * @brief Determines whether knob turns or button presses will be ignored.  ISRs still fire,
-     *
-     * Set by `enable()` and `disable()`.
-     *
-     */
     bool _isEnabled = true;
 
-    /**
-     * @brief
-     *
-     */
-    unsigned long _lastRotaryInterruptTime = 0;
-    uint8_t _previousAB = 3;
-    int8_t _encoderPosition = 0;
-    long _stepValue;
-
-    /**
-     * @brief Sets the minimum and maximum values of `currentValue`.
-     *
-     * Set in `setBoundaries()` and used in `constrainValue()`.
-     *
-     */
-    long minEncoderValue = -1; long maxEncoderValue = 1;
-
-    /**
-     * @brief The amount of increment/decrement that will be applied to the
-     * encoder value when the knob is turned.
-     *
-     */
+    long minEncoderValue = -1;
+    long maxEncoderValue = 1;
+    bool circleValues = false;
     long stepValue = 1;
 
-    /**
-     * @brief Determines whether attempts to increment or decrement beyond
-     * the boundaries causes `currentValue` to wrap to the other boundary.
-     *
-     * Set in `setBoundaries()`.
-     *
-     */
-    bool circleValues = false;
+    long currentValue;
+    unsigned long _lastRotaryInterruptTime;
+    uint8_t _previousAB;
+    int8_t _encoderPosition;
+    bool encoderChangedFlag;
 
-    /**
-     * @brief The value tracked by `encoder_ISR()` when the encoder knob is turned.
-     *
-     * This value can be overwritten in `constrainValue()` whenever
-     * `getEncoderValue()` or `setEncoderValue()` are called.
-     *
-     */
-    volatile long currentValue;
+    long constrainValue( long value );
 
-    /**
-     * @brief Becomes `true` when `encoder_ISR()` changes `currentValue`,
-     * then becomes `false` when caught by `loop()` via `encoderChanged()`
-     *
-     */
-    volatile bool encoderChangedFlag;
+    bool buttonPressedFlag;
+    unsigned long _lastButtonInterruptTime;
+    unsigned long buttonPressedTime;
+    unsigned long buttonPressedDuration;
 
-    /**
-     * @brief Becomes `true` when `button_ISR()` changes `currentValue`,
-     * then becomes `false` when caught by `loop()` via `buttonPressed()`
-     *
-     */
-    volatile bool buttonPressedFlag;
-
-    /**
-     * @brief
-     *
-     */
-    volatile unsigned long _lastButtonInterruptTime, buttonPressedTime, buttonPressedDuration;
-
-    /**
-     * @brief The loop timer configured and started in `beginLoopTimer()`.
-     *
-     * This replaces the need to run the class loop in userspace `loop()`.
-     *
-     */
     esp_timer_handle_t loopTimer;
-
-    /**
-     * @brief Constrains a value to be in the range set by `setBoundaries()`.
-     *
-     * @param value The value to constrain
-     *
-     * @return The constrained value
-     */
-    long constrainValue(long value);
-
-    /**
-     * @brief Attaches ISRs to encoder and button pins.
-     *
-     * Used in `begin()` and `enable()`.
-     *
-     */
-    void attachInterrupts();
-
-    /**
-     * @brief Detaches ISRs from encoder and button pins.
-     *
-     * Used in the destructor and in `disable()`.
-     *
-     */
-    void detachInterrupts();
-
-    /**
-     * @brief Sets up the loop timer and starts it.
-     *
-     * Called in `begin()`.
-     *
-     */
     void beginLoopTimer();
 
-    /**
-     * @brief Static method called by the loop timer, which calls the loop function on a given instance.
-     *
-     * We need this because the timer cannot call a class method directly, but it can
-     * call a static method with an argument, so this gets around that limitation.
-     *
-     * @param arg
-     */
-    static void timerCallback( void *arg )
-    {
-      RotaryEncoder *instance = (RotaryEncoder *)arg;
-      instance->loop();
-    }
+    void attachInterrupts();
+    void detachInterrupts();
 
-    /**
-     * @brief Interrupt Service Routine for the encoder.
-     *
-     * Detects direction of knob turn and increments/decrements `currentValue`, and sets
-     * the `encoderChangedFlag` to be picked up by `encoderChanged()` in `_loop()`.
-     *
-     */
     void _encoder_ISR();
-
-    /**
-     * @brief Interrupt Service Routine for the pushbutton.
-     *
-     * Sets the `buttonPressedFlag` to be picked up by `buttonPressed()` in `_loop()`.
-     *
-     */
     void _button_ISR();
 };
 
