@@ -302,7 +302,7 @@ long RotaryEncoder::getEncoderValue()
   return value;
 }
 
-long RotaryEncoder::constrainValue( long value )
+long RotaryEncoder::constrainValue( long value ) const
 {
   if( value < minEncoderValue )
     return circleValues ? maxEncoderValue : minEncoderValue;

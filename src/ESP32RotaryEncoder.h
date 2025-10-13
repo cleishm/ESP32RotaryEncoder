@@ -270,7 +270,7 @@ class RotaryEncoder {
     int8_t _encoderPosition;
     bool encoderChangedFlag;
 
-    long constrainValue( long value );
+    long constrainValue( long value ) const;
 
     bool buttonPressedFlag;
     unsigned long _lastButtonInterruptTime;
