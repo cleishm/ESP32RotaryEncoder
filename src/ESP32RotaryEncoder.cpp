@@ -233,44 +233,37 @@ bool RotaryEncoder::isEnabled()
 
 void RotaryEncoder::enable()
 {
-  if( _isEnabled )
+  if( _isEnabled.exchange(true) )
     return;
 
   attachInterrupts();
-
-  _isEnabled = true;
 
   ESP_LOGD( LOG_TAG, "Input enabled" );
 }
 
 void RotaryEncoder::disable()
 {
-  if( !_isEnabled )
+  if( !_isEnabled.exchange(false) )
     return;
 
   detachInterrupts();
-
-  _isEnabled = false;
 
   ESP_LOGD( LOG_TAG, "Input disabled" );
 }
 
 bool RotaryEncoder::buttonPressed()
 {
-  bool wasPressed = false;
-  unsigned long duration = 0;
-
-  portENTER_CRITICAL( &mux );
-
   if( !_isEnabled ) {
-    portEXIT_CRITICAL( &mux );
     return false;
   }
 
+  bool wasPressed;
+  unsigned long duration;
+
+  portENTER_CRITICAL( &mux );
   wasPressed = buttonPressedFlag;
   buttonPressedFlag = false;
   duration = buttonPressedDuration;
-
   portEXIT_CRITICAL( &mux );
 
   if( wasPressed )
@@ -281,15 +274,17 @@ bool RotaryEncoder::buttonPressed()
 
 bool RotaryEncoder::encoderChanged()
 {
-  bool hasChanged = false;
-  long value = 0;
+  if( !_isEnabled ) {
+    return false;
+  }
+
+  bool hasChanged;
+  long value;
 
   portENTER_CRITICAL( &mux );
-  if( _isEnabled ) {
-    hasChanged = encoderChangedFlag;
-    value = currentValue;
-    encoderChangedFlag = false;
-  }
+  hasChanged = encoderChangedFlag;
+  encoderChangedFlag = false;
+  value = currentValue;
   portEXIT_CRITICAL( &mux );
 
   if( hasChanged )
@@ -346,6 +341,10 @@ void ARDUINO_ISR_ATTR RotaryEncoder::loop()
 
 void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
 {
+  if ( !_isEnabled ) {
+    return;
+  }
+
   portENTER_CRITICAL_ISR( &mux );
 
   // Simple software de-bounce
@@ -377,6 +376,10 @@ void ARDUINO_ISR_ATTR RotaryEncoder::_button_ISR()
 
 void ARDUINO_ISR_ATTR RotaryEncoder::_encoder_ISR()
 {
+  if ( !_isEnabled ) {
+    return;
+  }
+
   portENTER_CRITICAL_ISR( &mux );
 
   /**
