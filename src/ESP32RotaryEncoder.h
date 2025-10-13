@@ -13,6 +13,8 @@
 
 #endif
 
+#include <atomic>
+
 static constexpr int8_t RE_DEFAULT_PIN = -1;
 static constexpr uint8_t RE_DEFAULT_STEPS = 4;
 static constexpr uint64_t RE_LOOP_INTERVAL = 100000U;  // 0.1 seconds
@@ -255,7 +257,7 @@ class RotaryEncoder {
     const int8_t encoderPinVcc;
     const uint8_t encoderSteps;
 
-    bool _isEnabled = true;
+    std::atomic<bool> _isEnabled{true};
 
     long minEncoderValue = -1;
     long maxEncoderValue = 1;
