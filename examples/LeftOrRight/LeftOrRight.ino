@@ -82,8 +82,9 @@ void setup()
 {
 	Serial.begin( 115200 );
 
-	// This tells the library that the encoder has its own pull-up resistors
-	rotaryEncoder.setEncoderType( RotaryEncoder::Type::HAS_PULLUP );
+	// Uncomment if your encoder does not have its own pull-up resistors
+	//rotaryEncoder.enableEncoderPinPullup();
+	//rotaryEncoder.enableButtonPinPullup();
 
 	// The encoder will only return -1, 0, or 1, and will not wrap around.
 	rotaryEncoder.setBoundaries( -1, 1, false );

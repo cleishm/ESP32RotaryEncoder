@@ -58,15 +58,30 @@ class RotaryEncoder {
     ~RotaryEncoder();
 
     /**
-     * @brief Specifies whether the encoder pins need to use the internal pull-up resistors.
+     * @brief Enable the internal pull-up resistor for the encoder pin.
      *
-     * @note Call this in `setup()`.
+     * By default, the encoder pin on the ESP32 is floating - which requires that
+     * the encoder module has its own pull-up resistors or external pull-ups are used.
      *
-     * @param type  FLOATING if you're using a raw encoder not mounted to a PCB (internal pull-ups will be used);
-     *              HAS_PULLUP if your encoder is a module that has pull-up resistors, (internal pull-ups will not be used);
-     *              SW_FLOAT your encoder is a module that has pull-up resistors, but the resistor for the switch is missing (internal pull-up will be used for switch input only)
+     * If the encoder module does not have its own pull-ups, calling this method
+     * will enable the internal pull-up in the ESP32.
+     *
+     * @note Call this before `begin()`. It has no effect after.
      */
-    void setEncoderType( Type type );
+    void enableEncoderPinPullup() { encoderPinMode = INPUT_PULLUP; }
+
+    /**
+     * @brief Enable the internal pull-up resistor for the button pin.
+     *
+     * By default, the button pin on the ESP32 is floating - which requires that
+     * the button has its own pull-up resistors or external pull-ups are used.
+     *
+     * If the button does not have its own pull-ups, calling this method
+     * will enable the internal pull-up in the ESP32.
+     *
+     * @note Call this before `begin()`. It has no effect after.
+     */
+    void enableButtonPinPullup() { buttonPinMode = INPUT_PULLUP; }
 
     /**
      * @brief Set the minimum and maximum values that the encoder will return.

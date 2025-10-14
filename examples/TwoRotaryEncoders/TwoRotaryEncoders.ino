@@ -81,8 +81,9 @@ void button2ToggleRE1( unsigned long duration )
 
 void setup_RE1()
 {
-	// This tells the library that the encoder has its own pull-up resistors
-	rotaryEncoder1.setEncoderType( RotaryEncoder::Type::HAS_PULLUP );
+	// Uncomment if your encoder does not have its own pull-up resistors
+	//rotaryEncoder.enableEncoderPinPullup();
+	//rotaryEncoder.enableButtonPinPullup();
 
 	// Range of values to be returned by the encoder: minimum is 1, maximum is 10
 	// The third argument specifies whether turning past the minimum/maximum will
@@ -104,9 +105,9 @@ void setup_RE1()
 
 void setup_RE2()
 {
-	// This tells the library that the encoder does not have its own pull-up
-	// resistors, so the internal pull-up resistors will be enabled
-	rotaryEncoder2.setEncoderType( RotaryEncoder::Type::FLOATING );
+	// Uncomment if your encoder does not have its own pull-up resistors
+	//rotaryEncoder.enableEncoderPinPullup();
+	//rotaryEncoder.enableButtonPinPullup();
 
 	// Range of values to be returned by the encoder: minimum is -100, maximum is 100
 	// The third argument specifies whether turning past the minimum/maximum will wrap
