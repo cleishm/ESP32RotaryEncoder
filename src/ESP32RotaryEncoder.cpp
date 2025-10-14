@@ -348,10 +348,10 @@ void RotaryEncoder::setEncoderValue( long newValue )
 
 void ARDUINO_ISR_ATTR RotaryEncoder::loop()
 {
-  if( callbackEncoderChanged != NULL && encoderChanged() )
+  if( callbackEncoderChanged != nullptr && encoderChanged() )
     callbackEncoderChanged( getEncoderValue() );
 
-  if( callbackButtonPressed != NULL && buttonPressed() )
+  if( callbackButtonPressed != nullptr && buttonPressed() )
     callbackButtonPressed( buttonPressedDuration );
 }
 

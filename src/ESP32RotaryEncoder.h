@@ -230,8 +230,8 @@ class RotaryEncoder {
     void loop();
 
   private:
-    EncoderCallback callbackEncoderChanged = NULL;
-    ButtonCallback callbackButtonPressed = NULL;
+    EncoderCallback callbackEncoderChanged = nullptr;
+    ButtonCallback callbackButtonPressed = nullptr;
 
     int encoderPinMode = INPUT;
     int buttonPinMode  = INPUT;
