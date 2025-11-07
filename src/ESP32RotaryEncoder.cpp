@@ -21,6 +21,14 @@
   #endif
 #endif
 
+#if __cplusplus >= 201703L
+  #define MAYBE_UNUSED [[maybe_unused]]
+#elif defined( __GNUC__ ) || defined( __clang__ )
+  #define MAYBE_UNUSED __attribute__((unused))
+#else
+  #define MAYBE_UNUSED
+#endif
+
 static const DRAM_ATTR char *LOG_TAG = "ESP32RotaryEncoder";
 
 typedef enum {
@@ -247,7 +255,7 @@ bool RotaryEncoder::buttonPressed()
   }
 
   bool wasPressed;
-  unsigned long duration;
+  MAYBE_UNUSED unsigned long duration;
 
   portENTER_CRITICAL( &mux );
   wasPressed = buttonPressedFlag;
@@ -268,7 +276,7 @@ bool RotaryEncoder::encoderChanged()
   }
 
   bool hasChanged;
-  long value;
+  MAYBE_UNUSED long value;
 
   portENTER_CRITICAL( &mux );
   hasChanged = encoderChangedFlag;
