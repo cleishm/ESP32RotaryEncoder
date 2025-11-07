@@ -223,25 +223,10 @@ class RotaryEncoder {
     void resetEncoderValue() { setEncoderValue( 0 ); }
 
   private:
-    const char *LOG_TAG = "ESP32RotaryEncoder";
-
-    typedef enum {
-        LEFT  = -1,
-        STILL =  0,
-        RIGHT =  1
-    } Rotation;
-
-    Rotation encoderStates[16] = {
-      STILL, LEFT,  RIGHT, STILL,
-      RIGHT, STILL, STILL, LEFT,
-      LEFT,  STILL, STILL, RIGHT,
-      STILL, RIGHT, LEFT,  STILL
-    };
-
     mutable portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 
-    EncoderCallback callbackEncoderChanged = NULL;
-    ButtonCallback callbackButtonPressed = NULL;
+    EncoderCallback callbackEncoderChanged = nullptr;
+    ButtonCallback callbackButtonPressed = nullptr;
 
     int encoderPinMode = INPUT;
     int buttonPinMode  = INPUT;
